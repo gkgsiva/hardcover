@@ -1,0 +1,23 @@
+name: Test Lua syntax
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LuaJIT and zip
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y luajit zip
+      - name: Check Lua syntax
+        run: luajit -e 'assert(loadfile("main.lua")); assert(loadfile("_meta.lua"))'
+      - name: Verify release archive
+        run: |
+          ./create-release.sh ci-test
+          unzip -Z1 hardcover.koplugin-ci-test.zip | sort | diff -u - <(printf '%s\n' hardcover.koplugin/ hardcover.koplugin/_meta.lua hardcover.koplugin/main.lua)
